@@ -23,7 +23,7 @@ int initialize_memory(struct Memory *memory);
 void *s_malloc(struct Memory *memory, size_t size);
 
 /* Free a previously allocated block */
-void s_free(struct Memory *memory, void *ptr);
+void s_free(void *ptr);
 
 /* Allocate zero-initialized memory */
 void *s_calloc(struct Memory *memory, size_t nmemb, size_t size);
@@ -33,5 +33,8 @@ void *s_realloc(struct Memory *memory, void *ptr, size_t size);
 
 /* DEBUG leak reporter */
 void s_DEBUG_report_leaks(struct Memory *memory);
+
+/* Debug dump memory */
+void s_DEBUG_dump_memory(struct Memory *memory);
 
 #endif

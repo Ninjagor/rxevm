@@ -19,6 +19,8 @@ struct Block {
     size_t size;
     int free;
     struct Block *next;
+    struct Block *prev;
+    unsigned int magic;
 };
 
 struct Memory {
@@ -31,5 +33,6 @@ struct Memory {
 #define ALIGN(size) (((size) + alignof(max_align_t) - 1) & ~(alignof(max_align_t) - 1))
 #define BLOCK_SIZE sizeof(Block)
 #define MIN_BLOCK_SIZE 16
+#define BLOCK_MAGIC 0xDEADBEEF
 
 #endif

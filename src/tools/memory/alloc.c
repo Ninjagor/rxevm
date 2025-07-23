@@ -16,6 +16,47 @@
 #include <stdlib.h>
 #include <string.h>
 
+/* Helper: Merge block with next if both free */
+static void try_merge_with_next(struct Block *block)
+{
+    if (block && block->next && block->free && block->next->free)
+    {
+        struct Block *next = block->next;
+        block->size += sizeof(struct Block) + next->size;
+        block->next = next->next;
+        if (block->next)
+            block->next->prev = block;
+    }
+}
+
+/* Helper: Coalesce adjacent free blocks starting from given block */
+static void coalesce_blocks(struct Block *block)
+{
+    if (!block)
+        return;
+
+    // Merge with next blocks as far as possible
+    while (block->next && block->free && block->next->free)
+        try_merge_with_next(block);
+
+    // Merge with previous if possible
+    if (block->prev && block->prev->free)
+        try_merge_with_next(block->prev);
+}
+
+/* Merge adjacent free blocks */
+static void coalesce(struct Memory *memory)
+{
+    struct Block *curr = memory->free_list;
+    while (curr && curr->next)
+    {
+        if (curr->free && curr->next->free)
+            try_merge_with_next(curr);
+        else
+            curr = curr->next;
+    }
+}
+
 /* malloc vm memory to initialize */
 int initialize_memory(struct Memory *memory)
 {
@@ -23,19 +64,22 @@ int initialize_memory(struct Memory *memory)
         return 0;
 
     memory->memory = malloc(VM_MEMORY_CAPACITY);
-    if (memory->memory == NULL)
-    {
-        perror("\nUnable to allocate memory\n");
+    if (!memory->memory) {
+        perror("Unable to allocate memory");
         return 1;
     }
 
     memory->mem_capacity = VM_MEMORY_CAPACITY;
     memory->has_initialized = true;
 
-    memory->free_list = (struct Block *)memory->memory;
-    memory->free_list->size = VM_MEMORY_CAPACITY - sizeof(struct Block);
-    memory->free_list->free = 1;
-    memory->free_list->next = NULL;
+    struct Block *block = (struct Block *)memory->memory;
+    block->size = VM_MEMORY_CAPACITY - sizeof(struct Block);
+    block->free = 1;
+    block->next = NULL;
+    block->prev = NULL;
+    block->magic = BLOCK_MAGIC;
+
+    memory->free_list = block;
 
     return 0;
 }
@@ -48,7 +92,13 @@ static void split_block(struct Block *block, size_t size)
         struct Block *new_block = (struct Block *)((char *)block + sizeof(struct Block) + size);
         new_block->size = block->size - size - sizeof(struct Block);
         new_block->free = 1;
+        new_block->magic = BLOCK_MAGIC;
+
         new_block->next = block->next;
+        new_block->prev = block;
+        if (new_block->next)
+            new_block->next->prev = new_block;
+
         block->size = size;
         block->next = new_block;
     }
@@ -58,6 +108,8 @@ static void split_block(struct Block *block, size_t size)
 void *s_malloc(struct Memory *memory, size_t size)
 {
     size = ALIGN(size);
+    coalesce(memory);
+
     struct Block *curr = memory->free_list;
 
     while (curr)
@@ -74,26 +126,8 @@ void *s_malloc(struct Memory *memory, size_t size)
     return NULL;
 }
 
-/* Merge adjacent free blocks */
-static void coalesce(struct Memory *memory)
-{
-    struct Block *curr = memory->free_list;
-    while (curr && curr->next)
-    {
-        if (curr->free && curr->next->free)
-        {
-            curr->size += sizeof(struct Block) + curr->next->size;
-            curr->next = curr->next->next;
-        }
-        else
-        {
-            curr = curr->next;
-        }
-    }
-}
-
 /* Free a previously allocated block */
-void s_free(struct Memory *memory, void *ptr)
+void s_free(void *ptr)
 {
     if (!ptr)
         return;
@@ -101,7 +135,7 @@ void s_free(struct Memory *memory, void *ptr)
     struct Block *block = (struct Block *)((char *)ptr - sizeof(struct Block));
     block->free = 1;
 
-    coalesce(memory);
+    coalesce_blocks(block);
 }
 
 /* Allocate zero-initialized memory */
@@ -122,7 +156,7 @@ void *s_realloc(struct Memory *memory, void *ptr, size_t size)
 
     if (size == 0)
     {
-        s_free(memory, ptr);
+        s_free(ptr);
         return NULL;
     }
 
@@ -141,7 +175,7 @@ void *s_realloc(struct Memory *memory, void *ptr, size_t size)
         return NULL;
 
     memcpy(new_ptr, ptr, block->size < size ? block->size : size);
-    s_free(memory, ptr);
+    s_free(ptr);
 
     return new_ptr;
 }
@@ -172,4 +206,26 @@ void s_DEBUG_report_leaks(struct Memory *memory)
         printf("  No leaks detected.\n");
     else
         printf("  %d leaks found, total leaked: %zu bytes\n", leak_count, total_leaked);
+}
+
+
+/* Debug dump memory */
+void s_DEBUG_dump_memory(struct Memory *memory)
+{
+    struct Block *curr = memory->free_list;
+    int index = 0;
+
+    printf("[Memory Dump]\n");
+
+    while (curr)
+    {
+        void *user_ptr = (void *)((char *)curr + sizeof(struct Block));
+        printf("  Block %d: %p | Size: %zu | %s\n",
+               index++,
+               user_ptr,
+               curr->size,
+               curr->free ? "Free" : "Used");
+
+        curr = curr->next;
+    }
 }
