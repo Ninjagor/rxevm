@@ -1,0 +1,8 @@
+_start
+    jmp _SUBROUTINE
+    halt 
+
+_SUBROUTINE
+    mov %4, #0x0003
+    mov %1, %4
+    ret

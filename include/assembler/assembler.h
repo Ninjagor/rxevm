@@ -12,6 +12,9 @@
 #ifndef ASSEMBLER_H
 #define ASSEMBLER_H
 
+#include "types.h"
+#include <stdbool.h>
+#include <stddef.h>
 enum OpCode {
     /* Reg and Math ops */
     MOV       = 0x01,
@@ -92,6 +95,13 @@ enum OpCode {
     DISABLESMOD = 0x91
 };
 
-int assemble(const char *filepath);
+Result assemble(const char* filepath, char* outDir, bool isQuiet, bool isVerbose);
+
+
+typedef struct {
+  char** strings;
+  size_t count;
+  size_t capacity;
+} StringTable;
 
 #endif

@@ -12,26 +12,12 @@
 #include "assembler/assembler.h"
 #include "tools/memory/alloc.h"
 #include "tools/memory/memory.h"
+#include "types.h"
 #include <unistd.h>
 #include <time.h>
 
 int main(int argc, char** argv)
 {
-    struct Memory memory = {0};
-
-    initialize_memory(&memory);
-
-    char* test = (char*)s_malloc(&memory, 5*sizeof(char));
-    char* test2 = (char*)s_malloc(&memory, 5*sizeof(char));
-
-    s_free(test);
-    s_free(test2);
-
-    s_DEBUG_dump_memory(&memory);
-    s_DEBUG_report_leaks(&memory);
-
-    free(memory.memory);
-    printf("Exited Successfully\n");
-
+    Result r = assemble("/Users/rohit/rohit-project-work/rxevm/samples/test1.rasm", "/Users/rohit/rohit-project-work/rxevm/rasm-build/", false, true);
     return 0;
 }
