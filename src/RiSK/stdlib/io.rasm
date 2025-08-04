@@ -8,7 +8,7 @@
 
 ; START print logic
 _PRINT
-    ; register map:
+    ; register map for PRINT:
         ; %0: syscall type - 0x6 for print char
         ; %3: general iterator 1
         ; %5: value that is printed on syscall for printchar
@@ -31,7 +31,7 @@ _LIB_PRINT_IMMEDIATE
 
 _LIB_PRINT_FROM_MEM
     mov %3 %7 ; set iterator to inp len
-    cmp %3 0x0 
+    cmp %3 #0x0 
     jg  _LOOP_LPFM_1 ; jump to loop if itr not equal 0
     jle _LPFM_RET ; else jump to the return
 
@@ -45,7 +45,7 @@ _LIB_PRINT_FROM_MEM
             add %6 %6 #0x1 ; increment mem address
             sub %3 %3 #0x1 ; decrement iterator
 
-            cmp %3 0x0 
+            cmp %3 #0x0 
             jg  _LOOP_LPFM_1 ; jump back to start of loop if itr not equal 0
             jle _LPFM_RET ; else jump to the return
 
