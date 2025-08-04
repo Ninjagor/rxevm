@@ -356,11 +356,13 @@ static Result second_pass(DynBuffer* opcodes, LabelMap* labels, ParsedLines* pli
     return SUCCESS;
 }
 
-Result assemble(const char* filepath, char* outDir, bool isQuiet, bool isVerbose) {
+Result assemble(const char* filepath, char* outDir, bool isQuiet, bool isVerbose, bool isLibrary) {
     char* raw_code = read_file_to_string(filepath);
     if (!raw_code) return ERROR;
 
-    const char* preamble = "JMP _START\n";
+    char* preamble = "JMP _START\n";
+    if (isLibrary)
+        preamble = "\n";
     size_t total_len = strlen(preamble) + strlen(raw_code) + 1;
 
     if (!isQuiet) {

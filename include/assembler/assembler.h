@@ -95,7 +95,7 @@ enum OpCode {
     DISABLESMOD = 0x91
 };
 
-Result assemble(const char* filepath, char* outDir, bool isQuiet, bool isVerbose);
+Result assemble(const char* filepath, char* outDir, bool isQuiet, bool isVerbose, bool isLibrary);
 
 
 typedef struct {

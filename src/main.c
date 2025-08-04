@@ -18,6 +18,7 @@
 
 int main(int argc, char** argv)
 {
-    Result r = assemble("/Users/rohit/rohit-project-work/rxevm/samples/test1.rasm", "/Users/rohit/rohit-project-work/rxevm/rasm-build/", false, true);
+    // Result r = assemble("/Users/rohit/rohit-project-work/rxevm/samples/test1.rasm", "/Users/rohit/rohit-project-work/rxevm/rasm-build/", false, true, true);
+    Result r = assemble("/Users/rohit/rohit-project-work/rxevm/src/RiSK/stdlib/io.rasm", "/Users/rohit/rohit-project-work/rxevm/rasm-build/", false, true, true);
     return 0;
 }
