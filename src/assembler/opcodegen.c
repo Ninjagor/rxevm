@@ -73,6 +73,7 @@ enum OpCode get_opcode_from_str(const char* instr) {
     if (strcmp(instr, "STS") == 0) return STS;
     if (strcmp(instr, "STSI") == 0) return STSI;
 
+    if (strcmp(instr, "SYS") == 0) return SYS;
 
     if (strcmp(instr, "DSTR") == 0) return -3;
     if (strcmp(instr, "STRS") == 0) return -2;

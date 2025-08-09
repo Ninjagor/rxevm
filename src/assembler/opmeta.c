@@ -54,6 +54,7 @@ int get_operand_count(enum OpCode op) {
     case RDI:
     case LOADB: return 2;
     case DRAW:
+    case SYS:
     case INITDISPLAY: return 0;
     case SPRB:
     case STRB: return 3;

@@ -92,7 +92,9 @@ enum OpCode {
     CLSM = 0x81,
 
     ENABLESMOD = 0x90,
-    DISABLESMOD = 0x91
+    DISABLESMOD = 0x91,
+
+    SYS = 0x95
 };
 
 Result assemble(const char* filepath, char* outDir, bool isQuiet, bool isVerbose, bool isLibrary);
