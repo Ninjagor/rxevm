@@ -1,0 +1,62 @@
+; Input/Output STDLIB module for RiSK
+;
+; Copyright (c) Rohit Karthik
+;
+; This source code is licensed under the license found in the
+; LICENSE file in the root directory of this source tree.
+
+
+; START print logic
+_PRINT
+    ; register map for PRINT:
+        ; %0: syscall type - 0x6 for print char
+        ; %3: general iterator 1
+        ; %5: value that is printed on syscall for printchar
+        ; %6: input value (either immediate or mem address)
+        ; %7: len of val to input, 0x0 for immediate, >0x0 indicating read from mem
+        ; %8: print type - ASCII or direct hex value
+        ; %24-%32: general purpose registers
+
+    cmp %7, #0x0
+    ceq _LIB_PRINT_IMMEDIATE
+    cg  _LIB_PRINT_FROM_MEM
+
+    ret
+
+_LIB_PRINT_IMMEDIATE
+    mov %5 %6
+    mov %0 #0x0006
+    ; sys
+    ret
+
+_LIB_PRINT_FROM_MEM
+    mov %3 %7 ; set iterator to inp len
+    cmp %3 #0x0 
+    jg  _LOOP_LPFM_1 ; jump to loop if itr not equal 0
+    jle _LPFM_RET ; else jump to the return
+
+        _LOOP_LPFM_1
+            cmp %8 #0x0
+            ceq _LPFM_LOAD_IMMEDIATE
+            cne _LPFM_LOAD_ASCII
+
+            call _LIB_PRINT_IMMEDIATE
+
+            add %6 %6 #0x1 ; increment mem address
+            sub %3 %3 #0x1 ; decrement iterator
+
+            cmp %3 #0x0 
+            jg  _LOOP_LPFM_1 ; jump back to start of loop if itr not equal 0
+            jle _LPFM_RET ; else jump to the return
+
+    _LPFM_RET
+        ret
+
+_LPFM_LOAD_IMMEDIATE
+    load %5 %6
+ret
+
+_LPFM_LOAD_ASCII
+    loadb %5 %6
+ret
+; END print logic

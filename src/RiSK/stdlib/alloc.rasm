@@ -1,0 +1,206 @@
+; Allocator STDLIB module for RiSK
+;
+; Copyright (c) Rohit Karthik
+
+; INFO
+; Register Allocation:
+    ; %9: bump_ptr (current allocation pointer)
+    ; %10: bump_end (end of heap)
+    ; %11: stack_ptr (current top of stack)
+    ; %12: stack_base (bottom of stack)
+    ; %13: bump_alloc_size (input)
+    ; %14: bump_alloc_result (output)
+    ; %15: stack_push_value (input)
+    ; %16: stack_pop_result (output)
+    ; %18: allocator_mode (0=bump, 1=heap)
+
+_ALLOC_INIT
+    cmp %18 #0
+    je  _BUMP_INIT
+    jmp _HEAP_INIT
+
+_BUMP_INIT
+    mov %9 #0x9000
+    mov %10 #0xF000
+    ret
+
+_HEAP_INIT
+    mov %9 #0x9000    ; heap base
+    mov %10 #0xF000   ; heap end
+    mov %15 %9        ; header ptr
+    mov %17 %10
+    sub %17 %17 %9 
+    shl %17 %17 #1
+    or  %17 %17 #1
+    store %15 %17     ; the initial free block header
+    ret
+
+_MEM_INIT
+    call _ALLOC_INIT
+
+    mov %11 #0x8FFF
+    mov %12 #0x8000
+    ret
+
+; allocate N words and input in %13 and result in %14
+_BUMP_ALLOC
+    mov %14 %9
+    add %9 %9 %13
+    cmp %9 %10
+    jl  _ALLOC_OK
+    mov %14 #0x0
+    ret
+_ALLOC_OK
+    ret
+
+; heap allocation with firstfit and split
+_HEAP_ALLOC
+    mov %16 %9
+
+_ALLOC_LOOP
+    cmp %16 %10
+    jge _ALLOC_FAIL
+    load %15 %16
+    and %17 %15 #1
+    shr %15 %15 #1
+    cmp %17 #1         ; is block free?
+    jne _ALLOC_NEXT
+
+    cmp %15 %13
+    jl _ALLOC_NEXT
+
+    cmp %15 %13
+    jg _ALLOC_SPLIT
+
+    sub %15 %15 #1
+    shl %15 %15 #1
+    store %16 %15
+    add %14 %16 #1
+    ret
+
+_ALLOC_SPLIT
+    mov %17 %15
+    sub %17 %17 %13
+    sub %17 %17 #1
+    cmp %17 #1
+    jl _ALLOC_USE_FULL
+
+    mov %18 %13
+    add %18 %18 #1
+    shl %18 %18 #1
+    store %16 %18
+
+    add %19 %16 %18
+    shr %19 %19 #1
+    add %19 %19 #0
+
+    mov %20 %17
+    shl %20 %20 #1
+    or  %20 %20 #1
+    store %19 %20
+
+    add %14 %16 #1
+    ret
+
+_ALLOC_USE_FULL
+    sub %15 %15 #1
+    shl %15 %15 #1
+    store %16 %15
+    add %14 %16 #1
+    ret
+
+_ALLOC_NEXT
+    add %16 %16 %15
+    jmp _ALLOC_LOOP
+
+_ALLOC_FAIL
+    mov %14 #0
+    ret
+
+_ALLOCATE
+    cmp %18 #0
+    je _BUMP_ALLOC
+    jmp _HEAP_ALLOC
+
+_HEAP_FREE
+    cmp %18 #0
+    je _FREE_NOP
+    sub %15 %13 #1
+    load %16 %15
+    and %16 %16 #1
+    cmp %16 #1
+    je  _FREE_DONE
+    or %16 %16 #1
+    store %15 %16
+    mov %16 %15
+
+_COALESCE_LOOP
+    load %17 %16
+    shr %17 %17 #1
+    add %17 %16 %17
+    cmp %17 %10
+    jge _FREE_DONE
+    load %20 %17
+    and %21 %20 #1
+    cmp %21 #1
+    jne _FREE_DONE
+    shr %20 %20 #1
+    load %21 %16
+    shr %21 %21 #1
+    add %21 %21 %20
+    shl %21 %21 #1
+    or %21 %21 #1
+    store %16 %21
+    jmp _COALESCE_LOOP
+
+_FREE_DONE
+    ret
+
+_FREE_NOP
+    ret
+
+_STACK_PUSH_BUMP
+    store %11 %15
+    sub %11 %11 #0x1
+    cmp %11 %12
+    jl _STACK_OVERFLOW
+    ret
+
+_STACK_PUSH_HEAP
+    store %11 %15
+    sub %11 %11 #0x1
+    cmp %11 %12
+    jl _STACK_OVERFLOW
+    ret
+
+_STACK_PUSH_DISPATCH
+    cmp %18 #0
+    je _STACK_PUSH_BUMP
+    jmp _STACK_PUSH_HEAP
+
+_STACK_POP_BUMP
+    add %11 %11 #0x1
+    load %16 %11
+    cmp %11 #0x8FFF
+    jg _STACK_UNDERFLOW
+    ret
+
+_STACK_POP_HEAP
+    add %11 %11 #0x1
+    load %16 %11
+    cmp %11 #0x8FFF
+    jg _STACK_UNDERFLOW
+    ret
+
+_STACK_POP_DISPATCH
+    cmp %18 #0
+    je _STACK_POP_BUMP
+    jmp _STACK_POP_HEAP
+
+_STACK_OVERFLOW
+    ; handle stack overflow (noop for now)
+    ret
+
+_STACK_UNDERFLOW
+    ; handle stack underflow (noop for now)
+    ret

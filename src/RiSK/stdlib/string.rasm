@@ -1,0 +1,114 @@
+; String operations STDLIB module for RiSK
+;
+; Copyright (c) Rohit Karthik
+;
+; This source code is licensed under the license found in the
+; LICENSE file in the root directory of this source tree.
+
+; Register Allocation:
+    ; %19 - input mem address
+    ; %20 - string length
+    ; %21 - copy of mem address
+
+; START strlen implementation
+_STRLEN
+    mov %21 %19
+    mov %20 #0x0
+
+_LOOP_STRL_1
+    loadb %3 %21
+    cmp %3 #0x0
+    je  _STRL_RET
+    add %20 %20 #0x1
+    add %21 %21 #0x1
+    jmp _LOOP_STRL_1
+
+_STRL_RET
+    ret
+; END strlen implementation
+
+
+; Register Allocation:
+    ; %3 - iterator 1
+    ; %4 - iterator 2 & tmp
+    ; %19 - initial mem address of string
+    ; %21 - mem address to copy string to
+    ; %22 - initial+length
+    ; %23 - loaded value from mem addr
+
+; START strcpy implementation
+_STRCPY
+    ; swp tmp
+    mov %4 %21
+
+    call _STRLEN ; populates %20 with strlen
+
+    ; get back
+    mov %21 %4
+
+    mov %3 %19
+    mov %4 %21
+    mov %22 %19
+    add %22 %22 %20
+
+_LOOP_STRCPY_1
+    cmp %3 %22
+    je  _STRCPY_RET
+
+    loadb %23 %3
+    store %4 %23
+
+    add %3 %3 #0x1
+    add %4 %4 #0x1
+
+    jmp _LOOP_STRCPY_1
+
+_STRCPY_RET
+    ret
+; END strcpy implementation
+
+; Register Allocation:
+    ; %3 - iterator 1
+    ; %4 - iterator 2 & tmp
+    ; %19 - input mem address (dest string)
+    ; %20 - string length
+    ; %21 - copy of mem address
+    ; %22 - initial+length
+    ; %23 - loaded value from mem addr
+    ; %24 - saved src start address
+
+; START strcat implementation (NOT TESTED - DO NOT USE YET!!!)
+_STRCAT
+    mov %4 %19
+
+    call _STRLEN        ; get dest length in %20 (strlen(dest))
+
+    mov %19 %4
+
+    add %21 %19 %20
+
+    mov %24 %21
+    mov %19 %21
+    mov %21 %23
+    mov %23 %21
+    mov %19 %24
+    mov %21 %23
+
+_LOOP_STRCAT_1
+    loadb %22 %21
+    cmp %22 #0x0
+    je  _STRCAT_RET
+    store %19 %22
+
+    add %19 %19 #0x1
+    add %21 %21 #0x1
+
+    jmp _LOOP_STRCAT_1
+
+_STRCAT_RET
+    mov %22 #0x0
+    store %19 %22
+
+    mov %19 %4
+    ret
+; END strcat implementation

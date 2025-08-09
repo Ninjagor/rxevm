@@ -18,6 +18,12 @@
 
 int main(int argc, char** argv)
 {
-    Result r = assemble("/Users/rohit/rohit-project-work/rxevm/samples/test1.rasm", "/Users/rohit/rohit-project-work/rxevm/rasm-build/", false, true);
+    // Result r = assemble("/Users/rohit/rohit-project-work/rxevm/samples/test1.rasm", "/Users/rohit/rohit-project-work/rxevm/rasm-build/", false, true, true);
+    Result r = assemble("/Users/rohit/rohit-project-work/rxevm/src/RiSK/stdlib/io.rasm", "/Users/rohit/rohit-project-work/rxevm/rasm-build/", false, true, true);
+    printf("\n\n\n");
+    Result r2 = assemble("/Users/rohit/rohit-project-work/rxevm/src/RiSK/stdlib/alloc.rasm", "/Users/rohit/rohit-project-work/rxevm/rasm-build/", false, true, true);
+    printf("\n\n\n");
+    Result r3 = assemble("/Users/rohit/rohit-project-work/rxevm/src/RiSK/stdlib/string.rasm", "/Users/rohit/rohit-project-work/rxevm/rasm-build/", false, true, true);
+    Result r4 = assemble("/Users/rohit/rohit-project-work/rxevm/src/RiSK/stdlib/mem.rasm", "/Users/rohit/rohit-project-work/rxevm/rasm-build/", false, true, true);
     return 0;
 }

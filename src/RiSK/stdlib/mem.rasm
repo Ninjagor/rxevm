@@ -1,0 +1,38 @@
+; Memory operations STDLIB module for RiSK
+;
+; Copyright (c) Rohit Karthik
+;
+; This source code is licensed under the license found in the
+; LICENSE file in the root directory of this source tree.
+
+; Register Allocation:
+    ; %3 - iterator 1
+    ; %4 - iterator 2
+    ; %19 - initial mem address
+    ; %20 - mem length length
+    ; %21 - mem address to copy to
+    ; %22 - initial+length
+    ; %23 - loaded value from mem addr
+
+; START memcpy implementation
+_MEMCPY
+    mov %3 %19
+    mov %4 %21
+    mov %22 %19
+    add %22 %22 %20
+
+_LOOP_MEMCPY_1
+    cmp %3 %22
+    je  _MEMCPY_RET
+
+    load %23 %3
+    store %4 %23
+
+    add %3 %3 #0x1
+    add %4 %4 #0x1
+
+    jmp _LOOP_MEMCPY_1
+
+_MEMCPY_RET
+    ret
+; END memcpy implementation
